@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: yoshlar-rahbar-portali
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    disk:
+      name: portal-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

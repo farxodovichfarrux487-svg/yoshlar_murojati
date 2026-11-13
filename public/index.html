@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quyi Chirchiq tumani — Yoshlar va Rahbar Uchrashuvi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+body{font-family:'Inter',system-ui,sans-serif}
+@keyframes title-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.animated-logo {
+  animation: title-bounce 3s infinite ease-in-out;
+}
+@media print{body *{visibility:hidden}#printable,#printable *{visibility:visible}#printable{position:absolute;left:0;top:0;width:100%;padding:20px}.no-print{display:none!important}}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+<!-- KIRISH -->
+<div id="login" class="hidden min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900">
+  <form onsubmit="doLogin(event)" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 space-y-4">
+    <div class="text-center"><div class="text-4xl">🏛️</div><h1 class="font-extrabold text-lg mt-2">Yoshlar va Rahbar Uchrashuvi</h1><p class="text-xs text-slate-500">Murojaat va ijro nazorati portali</p></div>
+    <div><label class="block text-xs font-semibold mb-1" for="lu">Login</label><input id="lu" required autocomplete="username" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500"></div>
+    <div><label class="block text-xs font-semibold mb-1" for="lp">Parol</label><input id="lp" type="password" required autocomplete="current-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500"></div>
+    <p id="lerr" class="text-xs text-red-600 min-h-4"></p>
+    <button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg py-2.5 text-sm">Kirish</button>
+  </form>
+</div>
+
+<!-- ILOVA -->
+<div id="app" class="hidden flex flex-col min-h-screen">
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40 no-print">
+    <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Logo va Sarlavha qismi -->
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center justify-center">
+          <img src="/images/logo.png" alt="Quyi Chirchiq tumani — Yoshlar va Rahbar Uchrashuvi" class="h-12 md:h-14 object-contain animated-logo">
+        </div>
+      </div>
+
+      <!-- Foydalanuvchi va Chiqish tugmasi -->
+      <div class="flex items-center space-x-3">
+        <div class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs">
+          <span id="who" class="font-semibold"></span>
+          <span id="whoorg" class="text-slate-400 block text-[10px]"></span>
+        </div>
+        <button onclick="doLogout()" class="text-xs bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white px-3 py-2 rounded-lg transition">Chiqish</button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="flex-grow w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between md:items-center gap-4 no-print">
+      <div><span id="bbadge" class="bg-blue-500/30 text-blue-200 text-xs font-bold px-3 py-1 rounded-full border border-blue-400/30 uppercase tracking-wider"></span>
+        <h2 id="btitle" class="text-xl font-bold mt-2"></h2><p id="bdesc" class="text-xs text-slate-300 mt-1"></p></div>
+      <div id="bbtns" class="flex flex-wrap gap-2"></div>
+    </div>
+    <div id="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print"></div>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden no-print">
+      <div class="border-b border-slate-200 bg-slate-50/50 p-4 flex flex-col lg:flex-row justify-between lg:items-center gap-4">
+        <div id="tabs" class="flex flex-wrap gap-1 bg-slate-200/60 p-1 rounded-xl w-fit"></div>
+        <div id="filters" class="flex flex-wrap items-center gap-2">
+          <input id="fq" oninput="F.q=this.value;draw()" placeholder="🔍 Ism, mahalla yoki mazmun..." class="min-w-[200px] px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+          <select id="fs" onchange="F.st=this.value;draw()" class="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5"></select>
+          <select id="fc" onchange="F.cat=this.value;draw()" class="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5"></select>
+          <select id="fo" onchange="F.org=this.value;draw()" class="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5"></select>
+        </div>
+      </div>
+      <div id="content" class="p-4 overflow-x-auto"></div>
+    </div>
+  </main>
+</div>
+
+<div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+    <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center no-print"><h3 id="mt" class="font-bold text-sm"></h3>
+      <div class="flex items-center gap-2"><span id="mx"></span><button onclick="closeM()" class="text-slate-400 hover:text-white text-lg" aria-label="Yopish">✕</button></div></div>
+    <div id="mb" class="p-6 text-xs overflow-y-auto"></div>
+  </div>
+</div>
+<div id="toast" class="fixed right-4 bottom-4 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg opacity-0 transition-opacity pointer-events-none z-[60]" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ST={'Yangi':'bg-blue-100 text-blue-800','Jarayonda':'bg-amber-100 text-amber-800','Tasdiqlash kutilmoqda':'bg-purple-100 text-purple-800','Ijobiy hal etildi':'bg-emerald-100 text-emerald-800','Qayta ishlash kerak':'bg-orange-100 text-orange-800','Rad etildi':'bg-red-100 text-red-800'};
+const OPEN=['Yangi','Jarayonda','Qayta ishlash kerak'];
+const RS={pending:['Kutilmoqda','bg-purple-100 text-purple-800'],approved:['Tasdiqlandi','bg-emerald-100 text-emerald-800'],returned:['Qaytarildi','bg-orange-100 text-orange-800'],rejected:['Rad etildi','bg-red-100 text-red-800']};
+const inp='w-full bg-slate-50 border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-blue-500', lab='block font-semibold text-slate-700 mb-1';
+let me,bot='',tab='appeals',A=[],M=[],U=[],S={},C=[],F={q:'',st:'all',org:'all',cat:'all'};
+const isAdmin=()=>me.role==='admin', isStaff=()=>me.role!=='org';
+const fd=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const left=s=>Math.round((new Date(s+'T00:00:00')-new Date(new Date().toDateString()))/864e5);
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.k);toast.k=setTimeout(()=>t.style.opacity=0,3000)}
+async function api(p,o={}){
+  const fm=o.body instanceof FormData, r=await fetch('/api'+p,{credentials:'same-origin',method:o.method||(o.body?'POST':'GET'),headers:o.body&&!fm?{'Content-Type':'application/json'}:{},body:o.body&&!fm?JSON.stringify(o.body):o.body});
+  let j={};try{j=await r.json()}catch{}
+  if(r.status===401&&p!=='/login'){showLogin();throw new Error('Sessiya tugadi, qayta kiring.')}
+  if(!r.ok)throw new Error(j.error||'Xatolik');return j;
+}
+const go=async(fn,ok)=>{try{await fn();if(ok)toast(ok)}catch(x){toast(x.message)}};
+
+/* ---- Kirish ---- */
+function showLogin(){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');closeM()}
+async function doLogin(ev){ev.preventDefault();$('#lerr').textContent='';
+  try{const j=await api('/login',{body:{username:$('#lu').value,password:$('#lp').value}});me=j.user;bot=j.bot;$('#lp').value='';await start()}catch(x){$('#lerr').textContent=x.message}}
+async function doLogout(){await api('/logout',{method:'POST',body:{}}).catch(()=>{});location.reload()}
+async function start(){
+  $('#login').classList.add('hidden');$('#app').classList.remove('hidden');
+  tab=me.must_change?'profile':'appeals';F={q:'',st:'all',org:'all',cat:'all'};$('#fq').value='';
+  await load();
+}
+async function load(){
+  [A,M,S,C]=await Promise.all([api('/appeals'),api('/meetings'),api('/stats'),api('/categories')]);
+  U=isStaff()?await api('/users'):[];
+  draw();
+}
+
+/* ---- Chizish ---- */
+const dueBadge=a=>{if(!OPEN.includes(a.status))return'';const d=left(a.deadline),b='px-2 py-0.5 rounded-full font-bold text-[10px] ';
+  if(d<0)return`<span class="${b}bg-red-200 text-red-800">Muddati o'tgan (${-d} kun)</span>`;
+  if(d<=2)return`<span class="${b}bg-red-100 text-red-700">⚠️ ${d} kun qoldi</span>`;
+  if(d<=5)return`<span class="${b}bg-orange-100 text-orange-700">⚡ ${d} kun qoldi</span>`;
+  if(d<=10)return`<span class="${b}bg-amber-100 text-amber-700">⏳ ${d} kun qoldi</span>`;
+  return`<span class="${b}bg-blue-100 text-blue-700">${d} kun qoldi</span>`};
+const stBadge=s=>`<span class="px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${ST[s]||''}">${e(s)}</span>`;
+
+function draw(){
+  $('#who').textContent=me.fullname;$('#whoorg').textContent=me.position+(me.org?' · '+me.org:'');
+  const a=isAdmin(),s=isStaff();
+  $('#bbadge').textContent=a?'Super admin rejimi':s?'Tuman rahbari rejimi':'Tashkilot rahbari kabineti';
+  $('#btitle').textContent=a?'Boshqaruv paneli va barcha tizim nazorati':s?'Tuman hokimi va payshanba uchrashuvlari portali':e(me.org)+' murojaatlari';
+  $('#bdesc').textContent=a?"Murojaatlar, javob xatlarini tasdiqlash, rahbarlar va Telegram bir joyda.":s?"Murojaat kiriting, bayonnoma yozing va ijroni kuzating.":"Murojaat va bayonnomani o'qing, o'rganib chiqib javob xatini kiriting.";
+  $('#bbtns').innerHTML=(s?`<button onclick="appealForm()" class="bg-blue-600 hover:bg-blue-500 text-xs font-bold px-4 py-2.5 rounded-xl shadow">➕ Yangi murojaat</button><button onclick="meetingForm()" class="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold px-4 py-2.5 rounded-xl shadow">📝 Yangi bayonnoma</button>`:'')+`<button onclick="exportCSV()" class="bg-slate-700 hover:bg-slate-600 text-xs font-bold px-4 py-2.5 rounded-xl shadow">⬇️ Excel (CSV)</button>`;
+  const card=(t,v,sub,col,ic,fl)=>`<div ${fl?`onclick="F.st='${fl}';tab='appeals';draw()" role="button"`:''} class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between ${fl?'cursor-pointer hover:border-blue-400':''}"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${t}</p><h3 class="text-2xl font-extrabold ${col} mt-1">${v}</h3><p class="text-[11px] text-slate-400 mt-0.5">${sub}</p></div><div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl">${ic}</div></div>`;
+  $('#stats').innerHTML=card('Jami murojaatlar',S.total,'Payshanba uchrashuvlarida','text-slate-800','📁','all')+card('Jarayonda',S.progress,"Tashkilotlar o'rganmoqda",'text-amber-600','⏳')
+   +card('Tasdiqlash kutilmoqda',S.pending,a?'Admin tasdig\'ini kutmoqda':'Admin ko\'rib chiqmoqda','text-purple-600','📨','Tasdiqlash kutilmoqda')+card('Ijobiy hal etildi',S.done,'Admin tasdiqlagan','text-emerald-600','✅','Ijobiy hal etildi');
+  const T=[['appeals','📋 Murojaatlar'],['meetings','📑 Bayonnomalar']].concat(s?[]:[]).concat(a?[['users','👥 Rahbarlar'],['tg','✈️ Telegram xabarlari']]:[]).concat([['profile','👤 Profil']]);
+  $('#tabs').innerHTML=T.map(([k,t])=>`<button onclick="tab='${k}';draw()" class="px-4 py-2 rounded-lg text-xs font-bold transition ${tab===k?'bg-white text-blue-600 shadow-sm':'text-slate-600 hover:text-slate-900'}">${t}${k==='appeals'&&S.pending&&a?` <span class="bg-purple-600 text-white rounded-full px-1.5">${S.pending}</span>`:''}</button>`).join('');
+  $('#filters').classList.toggle('hidden',tab!=='appeals');
+  $('#fs').innerHTML='<option value="all">Barcha holatlar</option>'+Object.keys(ST).map(k=>`<option ${F.st===k?'selected':''}>${k}</option>`).join('');
+  $('#fc').innerHTML='<option value="all">Barcha toifalar</option>'+C.map(c=>`<option ${F.cat===c?'selected':''}>${e(c)}</option>`).join('');
+  $('#fo').classList.toggle('hidden',!s);
+  $('#fo').innerHTML='<option value="all">Barcha tashkilotlar</option>'+[...new Set(A.map(x=>x.org))].map(o=>`<option ${F.org===o?'selected':''}>${e(o)}</option>`).join('');
+  $('#content').innerHTML=({appeals:vAppeals,meetings:vMeetings,users:vUsers,tg:vTg,profile:vProfile}[tab])();
+  if(tab==='tg')loadTg();
+}
+function vAppeals(){
+  const q=F.q.toLowerCase(),L=A.filter(x=>(!q||(x.name+x.text+x.subject+x.mahalla).toLowerCase().includes(q))&&(F.st==='all'||x.status===F.st)&&(F.cat==='all'||x.category===F.cat)&&(F.org==='all'||x.org===F.org));
+  if(!L.length)return'<div class="text-center py-12 text-slate-400"><p class="text-4xl mb-2">📂</p><p>Murojaat topilmadi.</p></div>';
+  return`<table class="w-full text-left text-xs text-slate-600 min-w-[820px]"><thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200"><tr><th class="p-3">№ / Sana</th><th class="p-3">Yosh va mahalla</th><th class="p-3">Toifa va masala</th><th class="p-3">Mas'ul</th><th class="p-3">Muddat</th><th class="p-3">Holati</th><th class="p-3"></th></tr></thead><tbody class="divide-y divide-slate-200">${L.map(x=>`<tr class="hover:bg-slate-50">
+  <td class="p-3 font-semibold text-slate-900">${e(x.number)}<br><span class="text-[10px] text-slate-400 font-normal">📅 ${e(x.date)}</span></td>
+  <td class="p-3"><b class="text-slate-800">${e(x.name)}</b><br><span class="text-[11px] text-slate-500">📍 ${e(x.mahalla)} | ${e(x.phone)}</span></td>
+  <td class="p-3 max-w-xs"><span class="inline-block bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded">${e(x.category)}</span><p class="line-clamp-2 mt-1">${e(x.subject)}</p></td>
+  <td class="p-3"><span class="font-medium text-slate-800">${e(x.org)}</span><br><span class="text-[10px] text-indigo-600">${e(x.leader)} ${x.leader_tg?'✈️':'<span title="Telegram ulanmagan" class="text-red-500">✈️✕</span>'}</span></td>
+  <td class="p-3"><b class="text-slate-700">${e(x.deadline)}</b><br>${dueBadge(x)}</td><td class="p-3">${stBadge(x.status)}</td>
+  <td class="p-3 text-right"><button onclick="openAppeal(${x.id})" class="bg-slate-800 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold">Ochish</button></td></tr>`).join('')}</tbody></table>`;
+}
+function vMeetings(){
+  if(!M.length)return'<p class="text-center py-10 text-slate-400">Hozircha bayonnomalar yo\'q. Imzolangan PDF bayonnomani yuklang.</p>';
+  return`<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${M.map(m=>`<div class="bg-slate-50 border border-slate-200 p-5 rounded-xl flex flex-col justify-between"><div>
+   <div class="flex justify-between mb-2"><span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded">Bayonnoma №${e(m.number||m.id)}</span><span class="text-xs text-slate-400">📅 ${e(m.date)}</span></div>
+   <p class="text-xs ${m.has_file?'text-slate-600':'text-red-500'}">${m.has_file?'📎 '+e(m.file_name):'PDF yuklanmagan'}</p></div>
+   <div class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap justify-end gap-1">
+   ${m.has_file?`<button onclick="viewMeeting(${m.id})" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg">📄 PDF ni o'qish</button>`:''}
+   ${isStaff()?`<button onclick="meetingForm(${m.id})" class="bg-slate-800 text-white text-[11px] px-2.5 py-1.5 rounded-lg" aria-label="Tahrirlash">✏️</button>`:''}${isAdmin()?`<button onclick="delMeeting(${m.id})" class="bg-red-50 text-red-600 text-[11px] px-2.5 py-1.5 rounded-lg" aria-label="O'chirish">🗑️</button>`:''}</div></div>`).join('')}</div>`;
+}
+function vUsers(){
+  const RN={admin:'Super admin',hokim:'Tuman rahbari',org:'Tashkilot rahbari'};
+  return`${isAdmin()?`<div class="flex justify-end mb-3"><button onclick="userForm()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2 rounded-lg">➕ Rahbar qo'shish</button></div>`:''}
+  <table class="w-full text-left text-xs text-slate-600 min-w-[640px]"><thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] border-b"><tr><th class="p-3">F.I.Sh. / lavozim</th><th class="p-3">Rol / tashkilot</th><th class="p-3">Login</th><th class="p-3">Telegram</th><th class="p-3"></th></tr></thead><tbody class="divide-y">
+  ${U.map(u=>`<tr><td class="p-3"><b class="text-slate-800">${e(u.fullname)}</b><br><span class="text-[10px] text-slate-400">${e(u.position)}</span></td><td class="p-3">${RN[u.role]}<br><span class="text-[10px] text-slate-400">${e(u.org)}</span></td><td class="p-3 font-mono text-blue-700">${e(u.username)}${u.must_change?'<br><span class="text-[10px] text-amber-600">parol almashtirilmagan</span>':''}</td>
+  <td class="p-3">${u.tg_linked?'<span class="text-emerald-600 font-semibold">✅ ulangan</span>':'<span class="text-red-500">ulanmagan</span>'}</td>
+  <td class="p-3 text-right whitespace-nowrap">${isAdmin()?`<button onclick="tgCode(${u.id})" class="bg-sky-600 text-white px-2 py-1 rounded text-[10px] font-bold">✈️ Kod</button> <button onclick="userForm(${u.id})" class="bg-slate-800 text-white px-2 py-1 rounded text-[10px] font-bold">✏️</button> <button onclick="delUser(${u.id})" class="bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-bold" aria-label="O'chirish">🗑️</button>`:''}</td></tr>`).join('')}</tbody></table>`;
+}
+function vTg(){return`<div class="flex justify-between items-center mb-3"><p class="text-[11px] text-slate-500">Yuborilgan xabarlar va xatolar. Eslatmalar har kuni 09:00 da avtomatik yuboriladi.</p><button onclick="runRem()" class="bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg">⏰ Eslatmalarni hozir yuborish</button></div><div id="tglog" class="space-y-2 text-xs"><p class="text-slate-400">Yuklanmoqda...</p></div>`}
+async function loadTg(){const L=await api('/tglog');$('#tglog').innerHTML=L.length?L.map(r=>`<div class="border rounded-lg p-2.5 ${r.ok?'bg-sky-50 border-sky-100':'bg-red-50 border-red-100'}"><span class="text-[10px] text-slate-400">${fd(r.at)} → <b>${e(r.to_name)}</b> ${r.ok?'✅ yuborildi':'❌ '+e(r.error)}</span><br>${e(r.text)}</div>`).join(''):'<p class="text-slate-400">Xabarlar hali yo\'q.</p>'}
+function vProfile(){return`${me.must_change?'<div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 mb-4 text-xs font-semibold">⚠️ Boshlang\'ich parolni almashtiring. Shundan keyingina tizimdan to\'liq foydalaning.</div>':''}
+ <div class="grid md:grid-cols-2 gap-6 max-w-3xl text-xs">
+ <form onsubmit="chPw(event)" class="space-y-3 bg-slate-50 border rounded-xl p-5"><h4 class="font-bold text-sm">🔑 Parolni almashtirish</h4>
+  <div><label class="${lab}" for="p0">Joriy parol</label><input id="p0" type="password" required class="${inp}"></div>
+  <div><label class="${lab}" for="p1">Yangi parol (kamida 8 belgi)</label><input id="p1" type="password" required minlength="8" class="${inp}"></div>
+  <button class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg">Saqlash</button></form>
+ <div class="space-y-3 bg-slate-50 border rounded-xl p-5"><h4 class="font-bold text-sm">✈️ Telegram</h4>
+  <p>${me.tg_linked?'<b class="text-emerald-600">✅ Telegram ulangan.</b> Murojaat va eslatmalar shu yerga keladi.':'<b class="text-red-500">Telegram ulanmagan.</b> Xabarlar kelmaydi.'}</p>
+  <button onclick="tgCode(0)" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg">${me.tg_linked?'Qayta ulash':'Ulash kodini olish'}</button><div id="tgbox"></div></div></div>`}
+async function chPw(ev){ev.preventDefault();await go(async()=>{await api('/me/password',{body:{old:$('#p0').value,pw:$('#p1').value}});me.must_change=false;draw()},"Parol almashtirildi")}
+async function tgCode(uid){await go(async()=>{const j=await api(uid?`/users/${uid}/tg-code`:'/me/tg-code',{method:'POST',body:{}});
+  const html=`<div class="bg-white border rounded-lg p-3 mt-2"><p>Rahbar Telegramda ${j.bot?`<b>@${e(j.bot)}</b> botini`:'botni'} ochib, quyidagini yuborsin (30 daqiqa amal qiladi):</p><p class="font-mono text-base font-bold mt-1 select-all">/start ${j.code}</p>${j.bot?'':'<p class="text-red-500 mt-1">Bot tokeni .env da sozlanmagan.</p>'}</div>`;
+  if(uid)modal('Telegramni ulash kodi',html);else $('#tgbox').innerHTML=html})}
+
+/* ---- Modal ---- */
+function modal(t,b,x=''){$('#mt').textContent=t;$('#mb').innerHTML=b;$('#mx').innerHTML=x;$('#modal').classList.remove('hidden');$('#modal').classList.add('flex')}
+function closeM(){$('#modal').classList.add('hidden');$('#modal').classList.remove('flex')}
+const fld=(id,l,v='',t='text',ph='')=>`<div><label class="${lab}" for="${id}">${l} *</label><input id="${id}" type="${t}" required value="${e(v)}" placeholder="${e(ph)}" class="${inp}"></div>`;
+const area=(id,l,v='',r=3)=>`<div><label class="${lab}" for="${id}">${l} *</label><textarea id="${id}" rows="${r}" required class="${inp}">${e(v)}</textarea></div>`;
+const btns=ok=>`<div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeM()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold">Bekor qilish</button><button class="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold">${ok}</button></div>`;
+const val=id=>$('#'+id).value.trim();
+const refresh=async ok=>{await load();closeM();if(ok)toast(ok)};
+
+/* ---- Murojaat tafsiloti ---- */
+async function openAppeal(id){
+  await go(async()=>{
+    const a=await api('/appeals/'+id), canResp=me.role==='org'&&OPEN.includes(a.status);
+    if(a.status!==A.find(x=>x.id===id)?.status)load().catch(()=>{});
+    const resp=a.responses.map(r=>`<div class="border rounded-lg p-3 ${r.state==='pending'?'border-purple-300 bg-purple-50':'bg-slate-50'}"><div class="flex justify-between gap-2"><b>${e(r.fullname)}</b><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${RS[r.state][1]}">${RS[r.state][0]}</span></div>
+      <p class="text-[10px] text-slate-400">${fd(r.created_at)}</p><p class="mt-1 whitespace-pre-line">${e(r.text)}</p>
+      ${r.file_name?`<a href="/api/responses/${r.id}/file" class="inline-block mt-2 text-blue-600 font-semibold underline">📎 ${e(r.file_name)}</a>`:''}
+      ${r.admin_comment?`<p class="mt-2 text-slate-700"><b>Admin izohi:</b> ${e(r.admin_comment)}</p>`:''}
+      ${isAdmin()&&r.state==='pending'?`<div class="mt-3 pt-3 border-t space-y-2"><textarea id="dc${r.id}" rows="2" placeholder="Izoh (qaytarish yoki rad etishda majburiy)" class="${inp}"></textarea><div class="flex flex-wrap gap-2">
+        <button onclick="decide(${r.id},'approve',${a.id})" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg">✅ Tasdiqlash (ijobiy hal etildi)</button>
+        <button onclick="decide(${r.id},'return',${a.id})" class="bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg">↩️ Qaytarish</button>
+        <button onclick="decide(${r.id},'reject',${a.id})" class="bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg">✖ Rad etish</button></div></div>`:''}</div>`).join('');
+    modal(a.number,`<div class="space-y-4">
+     <div class="flex flex-wrap items-center gap-2">${stBadge(a.status)} ${dueBadge(a)}</div>
+     <div class="grid grid-cols-2 gap-3 bg-slate-50 border rounded-xl p-4"><div class="col-span-2"><span class="text-slate-400">Murojaatchi (F.I.Sh.)</span><br><b>${e(a.name)}</b></div><div><span class="text-slate-400">Telefon</span><br><b>${e(a.phone)}</b></div>
+      <div><span class="text-slate-400">Mahalla</span><br><b>${e(a.mahalla)}</b></div><div><span class="text-slate-400">Ijro muddati</span><br><b>${e(a.deadline)}</b></div>
+      <div class="col-span-2"><span class="text-slate-400">Toifa</span><br><b>${e(a.category)}</b></div><div class="col-span-2"><span class="text-slate-400">Mas'ul</span><br><b>${e(a.org)}</b> — ${e(a.leader)}</div></div>
+     <div><h4 class="font-bold mb-1">Masala: ${e(a.subject)}</h4><p class="whitespace-pre-line bg-slate-50 border rounded-lg p-3">${e(a.text)}</p>${a.note?`<p class="mt-2"><b>Izoh:</b> ${e(a.note)}</p>`:''}</div>
+     ${a.meeting_id?`<button onclick="viewMeeting(${a.meeting_id})" class="bg-emerald-600 text-white font-bold px-4 py-2 rounded-lg">📑 Bayonnoma №${e(a.meeting_number||a.meeting_id)} (${e(a.meeting_date)}) PDF ni o'qish</button>`:'<p class="text-slate-400">Bayonnoma biriktirilmagan.</p>'}
+     <div><h4 class="font-bold mb-2">Javob xatlari</h4><div class="space-y-2">${resp||'<p class="text-slate-400">Hali javob xati kiritilmagan.</p>'}</div></div>
+     ${canResp?`<form onsubmit="sendResp(event,${a.id})" class="border-2 border-blue-200 bg-blue-50/50 rounded-xl p-4 space-y-3"><h4 class="font-bold text-sm">✍️ Javob xatini kiritish</h4>
+        <p class="text-slate-500">Bayonnomani o'qib, murojaatni tegishli tartibda o'rganib chiqing va natijani yozing. Admin tasdiqlagandan keyin murojaat "ijobiy hal etildi" bo'ladi.</p>
+        <textarea id="rt" rows="5" required minlength="10" placeholder="Natija: qanday choralar ko'rildi, yosh masalasi qanday hal etildi..." class="${inp}"></textarea>
+        <div><label class="${lab}" for="rf">Rasmiy javob xati (PDF, JPG, PNG, Word; 10 MB gacha)</label><input id="rf" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="text-xs"></div>
+        <button class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg">Adminga yuborish</button></form>`:''}
+     <div><h4 class="font-bold mb-2">Tarix</h4><ul class="space-y-1 border-l-2 border-slate-200 pl-3">${a.history.map(h=>`<li><span class="text-slate-400">${fd(h.at)}</span> · ${e(h.action)}${h.fullname?` <span class="text-slate-400">(${e(h.fullname)})</span>`:''}${h.note?`<br><i class="text-slate-500">${e(h.note)}</i>`:''}</li>`).join('')}</ul></div>
+     ${isStaff()?`<div class="flex gap-2 pt-2 border-t"><button onclick="appealForm(${a.id})" class="bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg">✏️ Tahrirlash</button>${isAdmin()?`<button onclick="delAppeal(${a.id})" class="bg-red-50 text-red-600 font-semibold px-4 py-2 rounded-lg">🗑️ O'chirish</button>`:''}</div>`:''}</div>`);
+  });
+}
+async function sendResp(ev,id){ev.preventDefault();const f=new FormData();f.append('text',val('rt'));const fl=$('#rf').files[0];if(fl)f.append('file',fl);
+  await go(async()=>{await api(`/appeals/${id}/response`,{body:f});await load();closeM()},"Javob xati adminga yuborildi")}
+async function decide(rid,d,aid){await go(async()=>{await api(`/responses/${rid}/decide`,{body:{decision:d,comment:($('#dc'+rid)||{value:''}).value}});await load();openAppeal(aid)},d==='approve'?'Tasdiqlandi: murojaat ijobiy hal etildi':'Qaror saqlandi')}
+async function delAppeal(id){if(confirm("Murojaat o'chirilsinmi?"))await go(async()=>{await api('/appeals/'+id,{method:'DELETE'});await refresh()},"O'chirildi")}
+
+/* ---- Formalar ---- */
+const fmtPhone=v=>{let d=String(v).replace(/\D/g,'');if(d.startsWith('998'))d=d.slice(3);d=d.slice(0,9);return'+998'+(d?' '+d.slice(0,2):'')+(d.length>2?' '+d.slice(2,5):'')+(d.length>5?' '+d.slice(5,7):'')+(d.length>7?' '+d.slice(7,9):'')};
+function appealForm(id){
+  const a=id?A.find(x=>x.id===id):{deadline:new Date(Date.now()+14*864e5).toISOString().slice(0,10),phone:'+998 '};
+  const L=U.filter(u=>u.role==='org');
+  modal(id?'Murojaatni tahrirlash':'Yangi yosh murojaati',`<form onsubmit="saveAppeal(event,${id||0})" class="space-y-3">
+   <div class="grid grid-cols-3 gap-3">${fld('a1','Familiya',a.last_name)}${fld('a2','Ism',a.first_name)}${fld('a3','Otasining ismi',a.middle_name)}</div>
+   <div class="grid grid-cols-2 gap-3"><div><label class="${lab}" for="a4">Telefon raqami *</label><input id="a4" required value="${e(a.phone)}" oninput="this.value=fmtPhone(this.value)" inputmode="numeric" pattern="\\+998 \\d{2} \\d{3} \\d{2} \\d{2}" title="+998 90 123 45 67" class="${inp}"></div>${fld('a5','Mahalla',a.mahalla,'text','Nurafshon MFY')}</div>
+   <div class="grid grid-cols-2 gap-3"><div><label class="${lab}" for="a6">Murojaat toifasi *</label><select id="a6" required class="${inp}"><option value="">— tanlang —</option>${C.map(c=>`<option ${c===a.category?'selected':''}>${e(c)}</option>`).join('')}</select></div>${fld('a7','Murojaat masalasi (qisqacha)',a.subject)}</div>
+   ${area('a8','Murojaat mazmuni',a.text)}
+   <div><label class="${lab}" for="a9">Izoh (ixtiyoriy)</label><textarea id="a9" rows="2" class="${inp}">${e(a.note||'')}</textarea></div>
+   <div class="grid grid-cols-2 gap-3"><div><label class="${lab}" for="b1">Qaysi bayonnomaga muvofiq *</label><select id="b1" required class="${inp}"><option value="">— tanlang —</option>${M.map(m=>`<option value="${m.id}" ${m.id===a.meeting_id?'selected':''}>№${e(m.number||m.id)} · ${e(m.date)}</option>`).join('')}</select></div>
+    <div><label class="${lab}" for="b2">Yo'naltirilgan mas'ul rahbar *</label><select id="b2" required class="${inp}"><option value="">— tanlang —</option>${L.map(u=>`<option value="${u.id}" ${u.id===a.user_id?'selected':''}>${e(u.fullname)} — ${e(u.org)}</option>`).join('')}</select></div></div>
+   ${fld('b3','Ijro muddati (bajarish muddati)',a.deadline,'date')}${btns(id?'Saqlash':'Saqlash va Telegramga yuborish')}</form>`);
+}
+async function saveAppeal(ev,id){ev.preventDefault();
+  await go(async()=>{await api(id?'/appeals/'+id:'/appeals',{method:id?'PUT':'POST',body:{last_name:val('a1'),first_name:val('a2'),middle_name:val('a3'),phone:val('a4'),mahalla:val('a5'),category:val('a6'),subject:val('a7'),text:val('a8'),note:val('a9'),meeting_id:+val('b1'),user_id:+val('b2'),deadline:val('b3')}});await refresh()},id?'Saqlandi':"Murojaat saqlandi va rahbarga Telegram orqali yuborildi")}
+function meetingForm(id){
+  const m=id?M.find(x=>x.id===id):{date:new Date().toISOString().slice(0,10)};
+  modal(id?'Bayonnomani tahrirlash':'Imzolangan bayonnomani yuklash',`<form onsubmit="saveMeeting(event,${id||0})" class="space-y-3">
+   <div class="grid grid-cols-2 gap-3">${fld('m1','Uchrashuv sanasi',m.date,'date')}${fld('m2','Bayonnoma raqami',m.number,'text','12')}</div>
+   <div><label class="${lab}" for="m3">Imzolangan bayonnoma (PDF, 20 MB gacha) ${id?'':'*'}</label><input id="m3" type="file" accept=".pdf,application/pdf" ${id?'':'required'} class="text-xs">${id&&m.file_name?`<p class="text-slate-500 mt-1">Hozirgi fayl: ${e(m.file_name)} (yangisini tanlasangiz almashtiriladi)</p>`:''}</div>
+   <p class="text-slate-500">Bayonnomani qo'lda tuzib, imzolab, skanerlangan PDF ko'rinishida yuklang. Tashkilot rahbarlari uni shu yerdan o'qiydi.</p>${btns('Saqlash')}</form>`);
+}
+async function saveMeeting(ev,id){ev.preventDefault();const f=new FormData();f.append('date',val('m1'));f.append('number',val('m2'));const fl=$('#m3').files[0];if(fl)f.append('file',fl);
+  await go(async()=>{await api(id?'/meetings/'+id:'/meetings',{method:id?'PUT':'POST',body:f});await refresh()},'Bayonnoma saqlandi')}
+async function delMeeting(id){if(confirm("Bayonnoma o'chirilsinmi?"))await go(async()=>{await api('/meetings/'+id,{method:'DELETE'});await load()},"O'chirildi")}
+function viewMeeting(id){
+  const m=M.find(x=>x.id===id);if(!m)return;
+  modal(`Bayonnoma №${m.number||m.id} (${m.date})`,`<iframe src="/api/meetings/${id}/file" title="Bayonnoma PDF" class="w-full border rounded-lg" style="height:68vh"></iframe><p class="mt-2"><a class="text-blue-600 font-semibold underline" href="/api/meetings/${id}/file" target="_blank" rel="noopener">PDF ni alohida oynada ochish / yuklab olish</a></p>`);
+}
+function userForm(id){
+  const u=id?U.find(x=>x.id===id):{role:'org'};
+  modal(id?'Rahbarni tahrirlash':'Yangi mas\'ul rahbar qo\'shish',`<form onsubmit="saveUser(event,${id||0})" class="space-y-3">
+    ${fld('u1','F.I.Sh.',u.fullname)}
+    ${fld('u2','Tashkilot nomi',u.org,'text','Masalan: Tuman obodonlashtirish boshqarmasi')}
+    ${fld('u3','Lavozimi',u.position,'text','Masalan: Boshqarma boshlig\'i')}
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="${lab}" for="u4">Rol *</label><select id="u4" required class="${inp}"><option value="org" ${u.role==='org'?'selected':''}>Tashkilot rahbari</option><option value="hokim" ${u.role==='hokim'?'selected':''}>Tuman rahbari</option><option value="admin" ${u.role==='admin'?'selected':''}>Super admin</option></select></div>
+      ${fld('u5','Login (username)',u.username)}
+    </div>
+    ${fld('u6',id?'Yangi parol (o\'zgartirish shart bo\'lmasa bo\'sh qoldiring)':'Boshlang\'ich parol',id?'':'12345678',id?'text':'text')}
+    ${btns('Saqlash')}</form>`);
+}
+async function saveUser(ev,id){ev.preventDefault();
+  await go(async()=>{await api(id?'/users/'+id:'/users',{method:id?'PUT':'POST',body:{fullname:val('u1'),org:val('u2'),position:val('u3'),role:val('u4'),username:val('u5'),password:val('u6')}});await refresh()},'Saqlandi');
+}
+async function delUser(id){if(confirm("Foydalanuvchi o'chirilsinmi?"))await go(async()=>{await api('/users/'+id,{method:'DELETE'});await refresh()},"O'chirildi")}
+
+/* ---- Excel Export ---- */
+function exportCSV(){
+  if(!A.length){toast("Eksport qilish uchun murojaatlar yo'q");return}
+  const headers=["Raqam","Sana","F.I.Sh.","Mahalla","Telefon","Toifa","Masala","Mas'ul tashkilot","Mas'ul rahbar","Muddat","Holati"];
+  const rows=A.map(a=>[a.number,a.date,a.name,a.mahalla,a.phone,a.category,a.subject,a.org,a.leader,a.deadline,a.status]);
+  const csvContent="\uFEFF"+[headers,...rows].map(e=>e.map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`murojaatlar_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+/* ---- Svodniy hisobot ---- */
+let RData = [];
+async function vReports() {
+  try {
+    RData = await api('/reports/organizations');
+  } catch {
+    RData = [];
+  }
+  if (!RData.length) return '<p class="text-center py-10 text-slate-400">Hozircha hisobot uchun maʼlumotlar yoʻq.</p>';
+
+  return `
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-800">🏢 Tashkilotlar kesimida yig‘ma (svodniy) hisobot</h3>
+        <button onclick="exportReportExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg">📥 Excelga yuklab olish</button>
+      </div>
+      <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+        <table class="w-full text-left text-xs text-slate-600 min-w-[750px]">
+          <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] border-b">
+            <tr>
+              <th class="p-3">T/r</th>
+              <th class="p-3">Tashkilot nomi</th>
+              <th class="p-3 text-center">Jami</th>
+              <th class="p-3 text-center">Yangi</th>
+              <th class="p-3 text-center">Jarayonda</th>
+              <th class="p-3 text-center">Tasdiqlashda</th>
+              <th class="p-3 text-center">Ijobiy</th>
+              <th class="p-3 text-center">Rad etildi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            ${RData.map((r, i) => `
+              <tr class="hover:bg-slate-50">
+                <td class="p-3 font-semibold">${i + 1}</td>
+                <td class="p-3 font-bold text-slate-800">${e(r.org)}</td>
+                <td class="p-3 text-center font-extrabold">${r.total}</td>
+                <td class="p-3 text-center text-blue-600 font-semibold">${r.yeni}</td>
+                <td class="p-3 text-center text-amber-600 font-semibold">${r.jarayonda}</td>
+                <td class="p-3 text-center text-purple-600 font-semibold">${r.kutilmoqda}</td>
+                <td class="p-3 text-center text-emerald-600 font-semibold">${r.ijobiy}</td>
+                <td class="p-3 text-center text-red-600 font-semibold">${r.rad}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function exportReportExcel() {
+  if (!RData.length) { toast("Eksport qilish uchun ma'lumot yo'q"); return; }
+  const headers = ["T/r", "Tashkilot nomi", "Jami", "Yangi", "Jarayonda", "Tasdiqlash kutilmoqda", "Ijobiy hal etildi", "Rad etildi"];
+  const rows = RData.map((r, i) => [i + 1, r.org, r.total, r.yeni, r.jarayonda, r.kutilmoqda, r.ijobiy, r.rad]);
+  const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.map(x => `"${String(x || '').replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `svodniy_hisobot_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+}
+
+(async () => {
+  try {
+    const j = await api('/me');
+    me = j.user;
+    bot = j.bot;
+    await start();
+  } catch {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
